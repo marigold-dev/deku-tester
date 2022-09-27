@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
-    "type": "module",
     "scripts": {
         "start": "ts-node-esm index.ts",
+        "build": "tsc index.ts",
         "test": "jest --watch"
     },
     "author": "",

@@ -47,6 +47,7 @@ async function sendToSlack(msg: string) {
 async function loop() {
   // Get the Deku balance to compare soon
   const data = `0x${Buffer.from(config.DATA).toString("hex")}`;
+  console.log(`Getting balance for ${data}`);
   const balance: number = await getBalance(data);
   console.log(`Balance before: ${balance}`);
 
