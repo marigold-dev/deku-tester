@@ -22,7 +22,7 @@ const config = {
   TEZOS_URL: process.env.TEZOS_URL || "https://ghostnet.tezos.marigold.dev/",
   MAX_ATTEMPTS: process.env.MAX_ATTEMPTS
     ? parseInt(process.env.MAX_ATTEMPTS)
-    : 10,
+    : 20,
 };
 
 const Tezos = new TezosToolkit(config.TEZOS_URL);
@@ -31,9 +31,8 @@ Tezos.setProvider({
 });
 
 async function getBalance(data: string): Promise<number> {
-  const balanceResponse = await axios.get(
-    `${config.DEKU_NODE}/api/v1/balance/${config.DEKU_USER_ADDRESS}/${config.DUMMY_CONTRACT_ADDRESS}/${data}`
-  );
+  const url = `${config.DEKU_NODE}/api/v1/balance/${config.DEKU_USER_ADDRESS}/${config.DUMMY_CONTRACT_ADDRESS}/${data}`;
+  const balanceResponse = await axios.get(url);
   return balanceResponse.data.balance;
 }
 
@@ -42,6 +41,8 @@ async function sendToSlack(msg: string) {
   return await axios.post(config.SLACK_URL, {
     text: `${config.ALERT_MSG_PREFIX}: ${msg}`,
   });
+  
+  console.log(`${config.ALERT_MSG_PREFIX}: ${msg}`);
 }
 
 async function loop() {
@@ -65,20 +66,22 @@ async function loop() {
   console.log("Minted to deku!");
 
   // Incremental loop to check the balance
-  const newBalance = undefined;
+  let newBalance = undefined;
   for (let i = 1; i <= config.MAX_ATTEMPTS; i++) {
-    const newBalance: number = await getBalance(data);
+    newBalance = await getBalance(data);
     console.log(
-      `Balance after: ${balance} - Attempt: ${i} of ${config.MAX_ATTEMPTS}`
+      `Balance after: ${newBalance} - Attempt: ${i} of ${config.MAX_ATTEMPTS}`
     );
-    if (balance === newBalance) {
-      await new Promise((resolve) => setTimeout(resolve, 1000 * i));
+
+    if (newBalance > balance) {
+      break;
     }
+    await new Promise((resolve) => setTimeout(resolve, 1000 * i));
   }
 
   // ASSERT
   if (!newBalance || balance >= newBalance) {
-    await sendToSlack(`Balance is not updated!`);
+    sendToSlack(`Balance is not updated!`);
   }
 }
 
@@ -87,7 +90,7 @@ async function main(): Promise<void> {
     try {
       await loop();
     } catch (e) {
-      await sendToSlack(`Error: ${e}`);
+      sendToSlack(`Error: ${e}`);
       await new Promise((res) => setTimeout(res, 300000));
     }
   }
