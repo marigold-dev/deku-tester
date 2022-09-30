@@ -90,7 +90,6 @@ async function main(): Promise<void> {
     try {
       await loop();
     } catch (e) {
-      sendToSlack(`Error: ${e}`);
       await new Promise((res) => setTimeout(res, 300000));
     }
   }
