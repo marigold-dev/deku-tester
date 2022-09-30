@@ -4,6 +4,8 @@ import axios from "axios";
 import * as dotenv from "dotenv";
 dotenv.config();
 
+class AlertError extends Error {}
+
 const config = {
   WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY!,
   DEKU_NODE: process.env.DEKU_NODE!,
@@ -37,12 +39,11 @@ async function getBalance(data: string): Promise<number> {
 }
 
 async function sendToSlack(msg: string) {
+  console.log(`${config.ALERT_MSG_PREFIX}: ${msg}`);
   // TODO: use alert manager instead
   return await axios.post(config.SLACK_URL, {
     text: `${config.ALERT_MSG_PREFIX}: ${msg}`,
   });
-  
-  console.log(`${config.ALERT_MSG_PREFIX}: ${msg}`);
 }
 
 async function loop() {
@@ -68,7 +69,11 @@ async function loop() {
   // Incremental loop to check the balance
   let newBalance = undefined;
   for (let i = 1; i <= config.MAX_ATTEMPTS; i++) {
-    newBalance = await getBalance(data);
+    try {
+      newBalance = await getBalance(data);
+    } catch (e: any) {
+      throw new AlertError(e.message)
+    }
     console.log(
       `Balance after: ${newBalance} - Attempt: ${i} of ${config.MAX_ATTEMPTS}`
     );
@@ -90,7 +95,9 @@ async function main(): Promise<void> {
     try {
       await loop();
     } catch (e) {
-      sendToSlack(`Error: ${e}`);
+      if (e instanceof AlertError) {
+        sendToSlack(`${e}`);
+      }
       await new Promise((res) => setTimeout(res, 300000));
     }
   }
