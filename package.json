@@ -9,7 +9,7 @@
         "test": "jest --watch"
     },
     "author": "",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@taquito/signer": "^14.0.0",
         "@taquito/taquito": "^14.0.0",
