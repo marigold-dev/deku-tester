@@ -5,10 +5,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const config = {
-  WALLET_PRIVATE_KEY: process.env.WALLET_PRIVATE_KEY!,
+  ALICE_PRIVATE_KEY: process.env.ALICE_PRIVATE_KEY!,
+  BOB_PRIVATE_KEY: process.env.BOB_PRIVATE_KEY!,
   DEKU_NODE: process.env.DEKU_NODE!,
   DEKU_USER_ADDRESS: process.env.DEKU_USER_ADDRESS!,
-  DEKU_CONSENSUS_ADDRESS: process.env.DEKU_CONSENSUS_ADDRESS!,
   DUMMY_CONTRACT_ADDRESS: process.env.DUMMY_CONTRACT_ADDRESS!,
   AMMOUT_OF_TICKETS: process.env.AMMOUT_OF_TICKETS
     ? parseInt(process.env.AMMOUT_OF_TICKETS)
@@ -27,7 +27,7 @@ const config = {
 
 const Tezos = new TezosToolkit(config.TEZOS_URL);
 Tezos.setProvider({
-  signer: new InMemorySigner(config.WALLET_PRIVATE_KEY),
+  signer: new InMemorySigner(config.ALICE_PRIVATE_KEY),
 });
 
 async function getBalance(data: string): Promise<number> {
@@ -38,14 +38,22 @@ async function getBalance(data: string): Promise<number> {
 
 async function sendToSlack(msg: string) {
   // TODO: use alert manager instead
+  const messageWithPrefix = `${config.ALERT_MSG_PREFIX}: ${msg}`;
+  console.log(messageWithPrefix);
   return await axios.post(config.SLACK_URL, {
-    text: `${config.ALERT_MSG_PREFIX}: ${msg}`,
+    text: messageWithPrefix,
   });
-  
-  console.log(`${config.ALERT_MSG_PREFIX}: ${msg}`);
+}
+
+type DekuInfo = { consensus: string };
+
+async function getDeku() {
+  const dekuInfo = await axios.get(`${config.DEKU_NODE}/api/v1/chain/info`);
+  return dekuInfo.data as DekuInfo;
 }
 
 async function loop() {
+  const dekuInfo = await getDeku();
   // Get the Deku balance to compare soon
   const data = `0x${Buffer.from(config.DATA).toString("hex")}`;
   console.log(`Getting balance for ${data}`);
@@ -56,7 +64,7 @@ async function loop() {
   const contract = await Tezos.contract.at(config.DUMMY_CONTRACT_ADDRESS!);
   const op = await contract.methods
     .mint_to_deku(
-      config.DEKU_CONSENSUS_ADDRESS, // deku concesus contract
+      dekuInfo.consensus, // deku concesus contract
       config.DEKU_USER_ADDRESS, // recipient, public key hash
       config.AMMOUT_OF_TICKETS, // amount of tickets
       data // bytes
