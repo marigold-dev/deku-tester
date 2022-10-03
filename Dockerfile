@@ -1,4 +1,4 @@
-FROM node:16.17.1-slim
+FROM node:18.10-slim
 WORKDIR /app
 COPY ["package.json", "package-lock.json*", "./"]
 RUN npm install
