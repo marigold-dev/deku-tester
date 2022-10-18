@@ -24,11 +24,11 @@ async function main(): Promise<void> {
       dekuRpc: dekuNode,
     }).setTezosRpc(config.TEZOS_URL);
 
-    console.log(`We are going to use the Deku Node: ${dekuNode}`)
+    console.log(`We are going to use the Deku Node: ${dekuNode}`);
     try {
       await Tester.loop(config, tezos, deku, data);
     } catch (e) {
-      console.log(e);
+      Tester.sendToSlack(config, e);
       await Utils.sleep(300);
     }
   }

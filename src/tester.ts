@@ -4,16 +4,14 @@ import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import { PackDataParams } from "@taquito/rpc";
 import axios from "axios";
 import Config from "./config";
-import Deku from "./deku";
 import Utils from "./utils";
 import BigNumber from "bignumber.js";
-import { RollupParametersDEKU } from "./rollup";
 
 namespace Tester {
-  async function sendToSlack(config: Config.Variables, msg: string) {
+  export async function sendToSlack(config: Config.Variables, msg: string | unknown) {
+    console.log(msg);
     // TODO: use alert manager instead
     const messageWithPrefix = `${config.ALERT_MSG_PREFIX}: ${msg}`;
-    console.log(messageWithPrefix);
     if (config.ENABLE_ALERTS) {
       return await axios.post(config.SLACK_URL, {
         text: messageWithPrefix,
