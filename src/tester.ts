@@ -6,6 +6,7 @@ import axios from "axios";
 import Config from "./config";
 import Utils from "./utils";
 import BigNumber from "bignumber.js";
+import { RollupParametersDEKU } from "./rollup";
 
 namespace Tester {
   export async function sendToSlack(config: Config.Variables, msg: string | unknown) {
@@ -57,6 +58,7 @@ namespace Tester {
     console.log(`Using the consensus address: ${info.consensus}`);
 
     // Get the Deku balance to compare soon
+    // TODO: Improve this
     console.log(`Getting balance for ${data}`);
     const aliceBalance = await deku.getBalance(config.ALICE_PUBLIC_KEY, {
       ticketer: config.DUMMY_CONTRACT_ADDRESS,
@@ -143,15 +145,14 @@ namespace Tester {
     }
 
     // Bob (Deku) withdraw to Tezos
-    const xtzData = await getXTZBytes();
-    const xtzBalance = new BigNumber(
+    const dekuBalance = new BigNumber(
       await deku.getBalance(config.BOB_PUBLIC_KEY, {
         ticketer: config.DUMMY_CONTRACT_ADDRESS,
         data,
       })
     );
     let decimals = Math.pow(10, 6);
-    console.log(`Deku balance before: ${xtzBalance}`);
+    console.log(`Deku balance before: ${dekuBalance}`);
     const dekuBob = deku.setDekuSigner(bobDekuSigner);
     const bobWithdrawToTezosOperation = await dekuBob.withdrawTo(
       config.BOB_PUBLIC_KEY,
@@ -169,7 +170,14 @@ namespace Tester {
       return;
     }
 
-    // const rollupContract = await tezos.wallet.at(config.ROLLUP_CONTRACT_DEKU);
+    console.log("AAAAAAAAAAAAAAAAAAAAA")
+    console.log(withdrawProof);
+
+    console.log("BBBBBBBBBBBBBBBBBBBBBB")
+    console.log(withdrawProof.proof)
+
+    const concesusContract = await tezos.wallet.at(info.consensus);
+    // THIS IS FROM TZPORTAL
     // let proofPair: Array<[string, string]> = [];
     // for (var i = 0; i < withdrawProof.proof.length; i = i + 2) {
     //   proofPair.push([
@@ -178,29 +186,33 @@ namespace Tester {
     //   ]);
     // }
 
-    // const params = new RollupParametersDEKU(
-    //   config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
-    //   parseFloat(withdrawProof.handle.amount),
-    //   withdrawProof.handle.ticket_id.data,
-    //   withdrawProof.handle.id,
-    //   withdrawProof.handle.owner,
-    //   withdrawProof.handle.ticket_id.ticketer,
-    //   withdrawProof.withdrawal_handles_hash,
-    //   proofPair
-    // );
+    const params = new RollupParametersDEKU(
+      config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
+      parseFloat(withdrawProof.handle.amount),
+      withdrawProof.handle.ticket_id.data,
+      withdrawProof.handle.id,
+      withdrawProof.handle.owner,
+      withdrawProof.handle.ticket_id.ticketer,
+      withdrawProof.withdrawal_handles_hash,
+      withdrawProof.proof as unknown as Array<[string, string]>
+      // proofPair
+    );
 
-    // const op = await rollupContract.methods.withdraw(...Object.values(params)).send();
-    // await op.confirmation(3);
+    const withdrawParams = Object.values(params) 
+    console.log(withdrawParams);
+
+    const op = await concesusContract.methods.withdraw(...withdrawParams).send();
+    await op.confirmation(3);
 
     // // ASSET Bob (Tezos) balance
-    // const bobTezosBalance = await tezos.tz.getBalance(config.BOB_PUBLIC_KEY);
-    // const bobTezosBalanceInTez = tezos.format("mutez", "tz", bobTezosBalance);
-    // console.log(`Bob Tezos final balance: ${bobTezosBalanceInTez}`);
+    const bobTezosBalance = await tezos.tz.getBalance(config.BOB_PUBLIC_KEY);
+    const bobTezosBalanceInTez = tezos.format("mutez", "tz", bobTezosBalance);
+    console.log(`Bob Tezos final balance: ${bobTezosBalanceInTez}`);
 
-    // if (bobTezosBalance.toNumber() <= bobTezosBalanceInTez) {
-    //   await sendToSlack(config, `Balance is not updated!`);
-    //   return;
-    // }
+    if (bobTezosBalance.toNumber() <= bobTezosBalanceInTez) {
+      await sendToSlack(config, `Balance is not updated!`);
+      return;
+    }
   }
 }
 
