@@ -1,16 +1,18 @@
 import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
-import { PackDataParams } from "@taquito/rpc";
 import axios from "axios";
 import Config from "./config";
 import Utils from "./utils";
 import BigNumber from "bignumber.js";
-import { RollupParametersDEKU } from "./rollup";
 
 namespace Tester {
-  export async function sendToSlack(config: Config.Variables, msg: string | unknown) {
+  export async function sendToSlack(
+    config: Config.Variables,
+    msg: string | unknown
+  ) {
     console.log(msg);
+    console.log(JSON.stringify(msg, null, 4));
     // TODO: use alert manager instead
     const messageWithPrefix = `${config.ALERT_MSG_PREFIX}: ${msg}`;
     if (config.ENABLE_ALERTS) {
@@ -20,27 +22,13 @@ namespace Tester {
     }
   }
 
-  export async function getXTZBytes(): Promise<string> {
-    const p = new MichelCodecPacker();
-    let XTZbytes: PackDataParams = {
-      data: { prim: "Left", args: [{ prim: "Unit" }] },
-      type: {
-        prim: "Or",
-        args: [
-          { prim: "Unit", annots: ["%XTZ"] },
-          { prim: "Address", annots: ["%FA"] },
-        ],
-      },
-    };
-    return (await p.packData(XTZbytes)).packed;
-  }
-
   export async function loop(
     config: Config.Variables,
     tezos: TezosToolkit,
     deku: DekuToolkit,
     data: string
   ) {
+    tezos.setPackerProvider(new MichelCodecPacker());
     const aliceDekuSigner = fromMemorySigner(
       new InMemorySigner(config.ALICE_PRIVATE_KEY)
     );
@@ -96,7 +84,8 @@ namespace Tester {
       if (newAliceBalance > aliceBalance) {
         break;
       }
-      await Utils.sleep(1);
+
+      await Utils.sleep(1 * i);
     }
 
     // ASSERT Alice (Deku) balance is greater than before
@@ -135,7 +124,7 @@ namespace Tester {
       if (newBobBalance > bobBalance) {
         break;
       }
-      await Utils.sleep(1);
+      await Utils.sleep(1 * i);
     }
 
     // ASSERT Bob (Deku) balance is greater than before
@@ -145,6 +134,9 @@ namespace Tester {
     }
 
     // Bob (Deku) withdraw to Tezos
+    tezos.setProvider({
+      signer: new InMemorySigner(config.BOB_PRIVATE_KEY),
+    });
     const dekuBalance = new BigNumber(
       await deku.getBalance(config.BOB_PUBLIC_KEY, {
         ticketer: config.DUMMY_CONTRACT_ADDRESS,
@@ -170,38 +162,94 @@ namespace Tester {
       return;
     }
 
-    console.log("AAAAAAAAAAAAAAAAAAAAA")
+    console.log("AAAAAAAAAAAAAAAAAAAAA");
     console.log(withdrawProof);
 
-    console.log("BBBBBBBBBBBBBBBBBBBBBB")
-    console.log(withdrawProof.proof)
+    console.log("BBBBBBBBBBBBBBBBBBBBBB");
+    console.log(withdrawProof.proof);
 
     const concesusContract = await tezos.wallet.at(info.consensus);
     // THIS IS FROM TZPORTAL
-    // let proofPair: Array<[string, string]> = [];
-    // for (var i = 0; i < withdrawProof.proof.length; i = i + 2) {
-    //   proofPair.push([
-    //     withdrawProof.proof[i].replace("0x", ""),
-    //     withdrawProof.proof[i + 1].replace("0x", ""),
-    //   ]);
-    // }
+    let proofPair: Array<[string, string]> = [];
+    for (var i = 0; i < withdrawProof.proof.length; i = i + 2) {
+      proofPair.push([
+        withdrawProof.proof[i].replace("0x", ""),
+        withdrawProof.proof[i + 1].replace("0x", ""),
+      ]);
+    }
 
-    const params = new RollupParametersDEKU(
-      config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
+    // const params = new ParametersDEKU(
+    //   config.DUMMY_CONTRACT_ADDRESS,
+    //   // + "%withdraw_from_deku",
+    //   parseFloat(withdrawProof.handle.amount),
+    //   withdrawProof.handle.ticket_id.data,
+    //   withdrawProof.handle.id,
+    //   withdrawProof.handle.owner,
+    //   withdrawProof.handle.ticket_id.ticketer,
+    //   withdrawProof.withdrawal_handles_hash,
+    //   withdrawProof.proof as unknown as Array<[string, string]>
+    //   // proofPair
+    // );
+    //
+
+    // const params = [
+    //   config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
+    //   parseFloat(withdrawProof.handle.amount),
+    //   withdrawProof.handle.ticket_id.data,
+    //   withdrawProof.handle.id,
+    //   withdrawProof.handle.owner,
+    //   withdrawProof.handle.ticket_id.ticketer,
+    //   withdrawProof.withdrawal_handles_hash.startsWith("0x")
+    //     ? withdrawProof.withdrawal_handles_hash.substring(2)
+    //     : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+    //   proofPair,
+    // ];
+    const params = [
+      info.consensus,
       parseFloat(withdrawProof.handle.amount),
       withdrawProof.handle.ticket_id.data,
       withdrawProof.handle.id,
       withdrawProof.handle.owner,
       withdrawProof.handle.ticket_id.ticketer,
-      withdrawProof.withdrawal_handles_hash,
-      withdrawProof.proof as unknown as Array<[string, string]>
-      // proofPair
+      withdrawProof.withdrawal_handles_hash.startsWith("0x")
+        ? withdrawProof.withdrawal_handles_hash.substring(2)
+        : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+      proofPair,
+    ];
+
+    console.log(params);
+
+    console.log(
+      `Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
+        concesusContract.methods.withdraw().getSignature(),
+        null,
+        2
+      )}`
     );
 
-    const withdrawParams = Object.values(params) 
-    console.log(withdrawParams);
+    console.log(
+      `DUMMY Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
+        dummy_contract.methods.withdraw_from_deku().getSignature(),
+        null,
+        2
+      )}`
+    );
 
-    const op = await concesusContract.methods.withdraw(...withdrawParams).send();
+    // const op = await concesusContract.methods.withdraw(...params).send();
+    const op = await dummy_contract.methods
+      .withdraw_from_deku(
+        info.consensus,
+        parseFloat(withdrawProof.handle.amount),
+        withdrawProof.handle.ticket_id.data,
+        withdrawProof.handle.id,
+        withdrawProof.handle.owner,
+        withdrawProof.handle.ticket_id.ticketer,
+        withdrawProof.withdrawal_handles_hash.startsWith("0x")
+          ? withdrawProof.withdrawal_handles_hash.substring(2)
+          : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+        proofPair
+      )
+      .send();
     await op.confirmation(3);
 
     // // ASSET Bob (Tezos) balance
