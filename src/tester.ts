@@ -4,7 +4,6 @@ import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import axios from "axios";
 import Config from "./config";
 import Utils from "./utils";
-import BigNumber from "bignumber.js";
 
 namespace Tester {
   export async function sendToSlack(
@@ -133,134 +132,135 @@ namespace Tester {
       return;
     }
 
+    // TODO:
     // Bob (Deku) withdraw to Tezos
-    tezos.setProvider({
-      signer: new InMemorySigner(config.BOB_PRIVATE_KEY),
-    });
-    const dekuBalance = new BigNumber(
-      await deku.getBalance(config.BOB_PUBLIC_KEY, {
-        ticketer: config.DUMMY_CONTRACT_ADDRESS,
-        data,
-      })
-    );
-    let decimals = Math.pow(10, 6);
-    console.log(`Deku balance before: ${dekuBalance}`);
-    const dekuBob = deku.setDekuSigner(bobDekuSigner);
-    const bobWithdrawToTezosOperation = await dekuBob.withdrawTo(
-      config.BOB_PUBLIC_KEY,
-      // config.AMMOUT_OF_TICKETS * decimals,
-      1,
-      config.DUMMY_CONTRACT_ADDRESS,
-      data
-    );
+    //tezos.setProvider({
+    //  signer: new InMemorySigner(config.BOB_PRIVATE_KEY),
+    //});
+    //const dekuBalance = new BigNumber(
+    //  await deku.getBalance(config.BOB_PUBLIC_KEY, {
+    //    ticketer: config.DUMMY_CONTRACT_ADDRESS,
+    //    data,
+    //  })
+    //);
+    //let decimals = Math.pow(10, 6);
+    //console.log(`Deku balance before: ${dekuBalance}`);
+    //const dekuBob = deku.setDekuSigner(bobDekuSigner);
+    //const bobWithdrawToTezosOperation = await dekuBob.withdrawTo(
+    //  config.BOB_PUBLIC_KEY,
+    //  // config.AMMOUT_OF_TICKETS * decimals,
+    //  1,
+    //  config.DUMMY_CONTRACT_ADDRESS,
+    //  data
+    //);
 
-    await Utils.sleep(10);
+    //await Utils.sleep(10);
 
-    const withdrawProof = await deku.getProof(bobWithdrawToTezosOperation);
-    if (!withdrawProof.handle.ticket_id) {
-      await sendToSlack(config, `Withdraw proof not created correctly!`);
-      return;
-    }
+    //const withdrawProof = await deku.getProof(bobWithdrawToTezosOperation);
+    //if (!withdrawProof.handle.ticket_id) {
+    //  await sendToSlack(config, `Withdraw proof not created correctly!`);
+    //  return;
+    //}
 
-    console.log("AAAAAAAAAAAAAAAAAAAAA");
-    console.log(withdrawProof);
+    //console.log("AAAAAAAAAAAAAAAAAAAAA");
+    //console.log(withdrawProof);
 
-    console.log("BBBBBBBBBBBBBBBBBBBBBB");
-    console.log(withdrawProof.proof);
+    //console.log("BBBBBBBBBBBBBBBBBBBBBB");
+    //console.log(withdrawProof.proof);
 
-    const concesusContract = await tezos.wallet.at(info.consensus);
-    // THIS IS FROM TZPORTAL
-    let proofPair: Array<[string, string]> = [];
-    for (var i = 0; i < withdrawProof.proof.length; i = i + 2) {
-      proofPair.push([
-        withdrawProof.proof[i].replace("0x", ""),
-        withdrawProof.proof[i + 1].replace("0x", ""),
-      ]);
-    }
+    //const concesusContract = await tezos.wallet.at(info.consensus);
+    //// THIS IS FROM TZPORTAL
+    //let proofPair: Array<[string, string]> = [];
+    //for (var i = 0; i < withdrawProof.proof.length; i = i + 2) {
+    //  proofPair.push([
+    //    withdrawProof.proof[i].replace("0x", ""),
+    //    withdrawProof.proof[i + 1].replace("0x", ""),
+    //  ]);
+    //}
 
-    // const params = new ParametersDEKU(
-    //   config.DUMMY_CONTRACT_ADDRESS,
-    //   // + "%withdraw_from_deku",
-    //   parseFloat(withdrawProof.handle.amount),
-    //   withdrawProof.handle.ticket_id.data,
-    //   withdrawProof.handle.id,
-    //   withdrawProof.handle.owner,
-    //   withdrawProof.handle.ticket_id.ticketer,
-    //   withdrawProof.withdrawal_handles_hash,
-    //   withdrawProof.proof as unknown as Array<[string, string]>
-    //   // proofPair
-    // );
-    //
+    //// const params = new ParametersDEKU(
+    ////   config.DUMMY_CONTRACT_ADDRESS,
+    ////   // + "%withdraw_from_deku",
+    ////   parseFloat(withdrawProof.handle.amount),
+    ////   withdrawProof.handle.ticket_id.data,
+    ////   withdrawProof.handle.id,
+    ////   withdrawProof.handle.owner,
+    ////   withdrawProof.handle.ticket_id.ticketer,
+    ////   withdrawProof.withdrawal_handles_hash,
+    ////   withdrawProof.proof as unknown as Array<[string, string]>
+    ////   // proofPair
+    //// );
+    ////
 
-    // const params = [
-    //   config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
-    //   parseFloat(withdrawProof.handle.amount),
-    //   withdrawProof.handle.ticket_id.data,
-    //   withdrawProof.handle.id,
-    //   withdrawProof.handle.owner,
-    //   withdrawProof.handle.ticket_id.ticketer,
-    //   withdrawProof.withdrawal_handles_hash.startsWith("0x")
-    //     ? withdrawProof.withdrawal_handles_hash.substring(2)
-    //     : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
-    //   proofPair,
-    // ];
-    const params = [
-      info.consensus,
-      parseFloat(withdrawProof.handle.amount),
-      withdrawProof.handle.ticket_id.data,
-      withdrawProof.handle.id,
-      withdrawProof.handle.owner,
-      withdrawProof.handle.ticket_id.ticketer,
-      withdrawProof.withdrawal_handles_hash.startsWith("0x")
-        ? withdrawProof.withdrawal_handles_hash.substring(2)
-        : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
-      proofPair,
-    ];
+    //// const params = [
+    ////   config.DUMMY_CONTRACT_ADDRESS + "%withdraw_from_deku",
+    ////   parseFloat(withdrawProof.handle.amount),
+    ////   withdrawProof.handle.ticket_id.data,
+    ////   withdrawProof.handle.id,
+    ////   withdrawProof.handle.owner,
+    ////   withdrawProof.handle.ticket_id.ticketer,
+    ////   withdrawProof.withdrawal_handles_hash.startsWith("0x")
+    ////     ? withdrawProof.withdrawal_handles_hash.substring(2)
+    ////     : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+    ////   proofPair,
+    //// ];
+    //const params = [
+    //  info.consensus,
+    //  parseFloat(withdrawProof.handle.amount),
+    //  withdrawProof.handle.ticket_id.data,
+    //  withdrawProof.handle.id,
+    //  withdrawProof.handle.owner,
+    //  withdrawProof.handle.ticket_id.ticketer,
+    //  withdrawProof.withdrawal_handles_hash.startsWith("0x")
+    //    ? withdrawProof.withdrawal_handles_hash.substring(2)
+    //    : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+    //  proofPair,
+    //];
 
-    console.log(params);
+    //console.log(params);
 
-    console.log(
-      `Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
-        concesusContract.methods.withdraw().getSignature(),
-        null,
-        2
-      )}`
-    );
+    //console.log(
+    //  `Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
+    //    concesusContract.methods.withdraw().getSignature(),
+    //    null,
+    //    2
+    //  )}`
+    //);
 
-    console.log(
-      `DUMMY Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
-        dummy_contract.methods.withdraw_from_deku().getSignature(),
-        null,
-        2
-      )}`
-    );
+    //console.log(
+    //  `DUMMY Inspect the signature of the 'withdraw' contract method: ${JSON.stringify(
+    //    dummy_contract.methods.withdraw_from_deku().getSignature(),
+    //    null,
+    //    2
+    //  )}`
+    //);
 
-    // const op = await concesusContract.methods.withdraw(...params).send();
-    const op = await dummy_contract.methods
-      .withdraw_from_deku(
-        info.consensus,
-        parseFloat(withdrawProof.handle.amount),
-        withdrawProof.handle.ticket_id.data,
-        withdrawProof.handle.id,
-        withdrawProof.handle.owner,
-        withdrawProof.handle.ticket_id.ticketer,
-        withdrawProof.withdrawal_handles_hash.startsWith("0x")
-          ? withdrawProof.withdrawal_handles_hash.substring(2)
-          : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
-        proofPair
-      )
-      .send();
-    await op.confirmation(3);
+    //// const op = await concesusContract.methods.withdraw(...params).send();
+    //const op = await dummy_contract.methods
+    //  .withdraw_from_deku(
+    //    info.consensus,
+    //    parseFloat(withdrawProof.handle.amount),
+    //    withdrawProof.handle.ticket_id.data,
+    //    withdrawProof.handle.id,
+    //    withdrawProof.handle.owner,
+    //    withdrawProof.handle.ticket_id.ticketer,
+    //    withdrawProof.withdrawal_handles_hash.startsWith("0x")
+    //      ? withdrawProof.withdrawal_handles_hash.substring(2)
+    //      : withdrawProof.withdrawal_handles_hash, //removes 0x if exists
+    //    proofPair
+    //  )
+    //  .send();
+    //await op.confirmation(3);
 
-    // // ASSET Bob (Tezos) balance
-    const bobTezosBalance = await tezos.tz.getBalance(config.BOB_PUBLIC_KEY);
-    const bobTezosBalanceInTez = tezos.format("mutez", "tz", bobTezosBalance);
-    console.log(`Bob Tezos final balance: ${bobTezosBalanceInTez}`);
+    //// // ASSET Bob (Tezos) balance
+    //const bobTezosBalance = await tezos.tz.getBalance(config.BOB_PUBLIC_KEY);
+    //const bobTezosBalanceInTez = tezos.format("mutez", "tz", bobTezosBalance);
+    //console.log(`Bob Tezos final balance: ${bobTezosBalanceInTez}`);
 
-    if (bobTezosBalance.toNumber() <= bobTezosBalanceInTez) {
-      await sendToSlack(config, `Balance is not updated!`);
-      return;
-    }
+    //if (bobTezosBalance.toNumber() <= bobTezosBalanceInTez) {
+    //  await sendToSlack(config, `Balance is not updated!`);
+    //  return;
+    //}
   }
 }
 
