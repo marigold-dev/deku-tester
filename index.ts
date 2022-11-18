@@ -28,7 +28,8 @@ async function main(): Promise<void> {
     try {
       await Tester.loop(config, tezos, deku, data);
     } catch (e) {
-      Tester.raiseError(e);
+      console.log(e);
+      Tester.raiseError("Something wrong, please check the logs");
       await Utils.sleep(300);
     }
   }

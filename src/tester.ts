@@ -6,8 +6,7 @@ import Utils from "./utils";
 
 namespace Tester {
   export async function raiseError(msg: string | unknown) {
-    console.log("ERROR: ", msg);
-    console.log(JSON.stringify(msg, null, 4));
+    console.log(`ERROR: ${msg}`);
   }
 
   export async function loop(
