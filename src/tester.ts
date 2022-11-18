@@ -1,24 +1,13 @@
 import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
 import { InMemorySigner } from "@taquito/signer";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
-import axios from "axios";
 import Config from "./config";
 import Utils from "./utils";
 
 namespace Tester {
-  export async function sendToSlack(
-    config: Config.Variables,
-    msg: string | unknown
-  ) {
-    console.log(msg);
+  export async function raiseError(msg: string | unknown) {
+    console.log("ERROR: ", msg);
     console.log(JSON.stringify(msg, null, 4));
-    // TODO: use alert manager instead
-    const messageWithPrefix = `${config.ALERT_MSG_PREFIX}: ${msg}`;
-    if (config.ENABLE_ALERTS) {
-      return await axios.post(config.SLACK_URL, {
-        text: messageWithPrefix,
-      });
-    }
   }
 
   export async function loop(
@@ -89,7 +78,7 @@ namespace Tester {
 
     // ASSERT Alice (Deku) balance is greater than before
     if (!newAliceBalance || aliceBalance >= newAliceBalance) {
-      await sendToSlack(config, `Balance is not updated!`);
+      await raiseError(`Balance is not updated!`);
       return;
     }
 
@@ -128,7 +117,7 @@ namespace Tester {
 
     // ASSERT Bob (Deku) balance is greater than before
     if (!newBobBalance || bobBalance >= newBobBalance) {
-      await sendToSlack(config, `Balance is not updated!`);
+      await raiseError(`Balance is not updated!`);
       return;
     }
 
@@ -158,7 +147,7 @@ namespace Tester {
 
     //const withdrawProof = await deku.getProof(bobWithdrawToTezosOperation);
     //if (!withdrawProof.handle.ticket_id) {
-    //  await sendToSlack(config, `Withdraw proof not created correctly!`);
+    //  await raiseError(`Withdraw proof not created correctly!`);
     //  return;
     //}
 
@@ -258,7 +247,7 @@ namespace Tester {
     //console.log(`Bob Tezos final balance: ${bobTezosBalanceInTez}`);
 
     //if (bobTezosBalance.toNumber() <= bobTezosBalanceInTez) {
-    //  await sendToSlack(config, `Balance is not updated!`);
+    //  await raiseError(`Balance is not updated!`);
     //  return;
     //}
   }

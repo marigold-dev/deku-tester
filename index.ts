@@ -28,7 +28,7 @@ async function main(): Promise<void> {
     try {
       await Tester.loop(config, tezos, deku, data);
     } catch (e) {
-      Tester.sendToSlack(config, e);
+      Tester.raiseError(e);
       await Utils.sleep(300);
     }
   }

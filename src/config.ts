@@ -21,8 +21,6 @@ namespace Config {
         ? parseInt(process.env.AMMOUT_OF_TICKETS)
         : 100,
       DATA: process.env.DATA || "hello world",
-      SLACK_URL: process.env.SLACK_URL!,
-      ALERT_MSG_PREFIX: process.env.ALERT_MSG_PREFIX || "DEKU_TESTER",
       CONFIRMATION: process.env.CONFIRMATION
         ? parseInt(process.env.CONFIRMATION)
         : 2,
