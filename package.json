@@ -12,8 +12,8 @@
   "license": "MIT",
   "dependencies": {
     "@marigold-dev/deku-toolkit": "^0.1.12",
-    "@taquito/signer": "^14.0.0",
-    "@taquito/taquito": "^14.0.0",
+    "@taquito/signer": "^14.1.0",
+    "@taquito/taquito": "^14.1.0",
     "axios": "^0.27.2",
     "bignumber.js": "^9.1.0",
     "dotenv": "^16.0.2"
