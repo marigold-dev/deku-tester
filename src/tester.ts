@@ -35,7 +35,7 @@ namespace Tester {
     // Get the Deku balance to compare soon
     // TODO: Improve this
     console.log(`Getting balance for ${data}`);
-    const aliceBalance = await deku.getBalance(config.ALICE_PUBLIC_KEY, {
+    let aliceBalance = await deku.getBalance(config.ALICE_PUBLIC_KEY, {
       ticketer: config.DUMMY_CONTRACT_ADDRESS,
       data,
     });
@@ -68,6 +68,11 @@ namespace Tester {
         `Balance after: ${newAliceBalance} - Attempt: ${i} of ${config.MAX_ATTEMPTS}`
       );
 
+      // Maybe there is a delay to update aliceBalance
+      if (newAliceBalance < aliceBalance) {
+        aliceBalance = newAliceBalance;
+      }
+
       if (newAliceBalance > aliceBalance) {
         break;
       }
@@ -82,7 +87,7 @@ namespace Tester {
     }
 
     // Check Bob (Deku) balance
-    const bobBalance = await deku.getBalance(config.BOB_PUBLIC_KEY, {
+    let bobBalance = await deku.getBalance(config.BOB_PUBLIC_KEY, {
       ticketer: config.DUMMY_CONTRACT_ADDRESS,
       data,
     });
@@ -107,6 +112,11 @@ namespace Tester {
       console.log(
         `Balance after: ${newBobBalance} - Attempt: ${i} of ${config.MAX_ATTEMPTS}`
       );
+
+      // Maybe there is a delay to update bobBalance
+      if (newBobBalance < bobBalance) {
+        bobBalance = newBobBalance;
+      }
 
       if (newBobBalance > bobBalance) {
         break;
