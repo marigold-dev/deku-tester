@@ -30,7 +30,7 @@ async function main(): Promise<void> {
     } catch (e) {
       console.log(e);
       Tester.raiseError("Something wrong, please check the logs");
-      await Utils.sleep(300);
+      return process.exit(1);
     }
   }
 }
