@@ -1,8 +1,7 @@
 import { TezosToolkit } from "@taquito/taquito";
-import { DekuToolkit } from "@marigold-dev/deku-toolkit";
+import { DekuPClient } from "@marigold-dev/deku";
 import Config from "./src/config";
 import Tester from "./src/tester";
-import Utils from "./src/utils";
 
 function changeVmNumber(str: string, vmNumber: number) {
   return str.replace(/vm\d+/g, "vm" + vmNumber);
@@ -20,7 +19,8 @@ async function main(): Promise<void> {
           Math.floor(Math.random() * config.TEST_WITH_X_RAND_NODES)
         )
       : config.DEKU_NODE;
-    const deku = new DekuToolkit({
+
+    const deku = new DekuPClient({
       dekuRpc: dekuNode,
     }).setTezosRpc(config.TEZOS_URL);
 

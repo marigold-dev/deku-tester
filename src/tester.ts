@@ -1,4 +1,4 @@
-import { DekuToolkit, fromMemorySigner } from "@marigold-dev/deku-toolkit";
+import { DekuPClient, fromMemorySigner } from "@marigold-dev/deku";
 import { InMemorySigner } from "@taquito/signer";
 import { MichelCodecPacker, TezosToolkit } from "@taquito/taquito";
 import Config from "./config";
@@ -12,18 +12,18 @@ namespace Tester {
   export async function loop(
     config: Config.Variables,
     tezos: TezosToolkit,
-    deku: DekuToolkit,
+    deku: DekuPClient,
     data: string
   ) {
     tezos.setPackerProvider(new MichelCodecPacker());
     const aliceDekuSigner = fromMemorySigner(
       new InMemorySigner(config.ALICE_PRIVATE_KEY)
     );
-    const bobDekuSigner = fromMemorySigner(
-      new InMemorySigner(config.BOB_PRIVATE_KEY)
-    );
+    // const bobDekuSigner = fromMemorySigner(
+    //   new InMemorySigner(config.BOB_PRIVATE_KEY)
+    // );
 
-    deku.setDekuSigner(aliceDekuSigner);
+    deku = deku.setDekuSigner(aliceDekuSigner)
 
     tezos.setProvider({
       signer: new InMemorySigner(config.ALICE_PRIVATE_KEY),
@@ -42,7 +42,7 @@ namespace Tester {
     console.log(`Alice Balance before: ${aliceBalance}`);
 
     // Alice (Tezos) call the dummy contract (create the tickets and sent to deku)
-    // TODO: I think that deku-toolkit should do that.
+    // TODO: I think that deku package should do that.
     const dummy_contract = await tezos.contract.at(
       config.DUMMY_CONTRACT_ADDRESS!
     );
